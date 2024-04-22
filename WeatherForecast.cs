@@ -1,4 +1,4 @@
-namespace PruebaTecnicaLisist
+namespace PruebaTecnicaLisit
 {
 	public class WeatherForecast
 	{

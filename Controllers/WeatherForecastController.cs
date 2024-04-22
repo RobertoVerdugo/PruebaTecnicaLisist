@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace PruebaTecnicaLisist.Controllers
+namespace PruebaTecnicaLisit.Controllers
 {
 	[ApiController]
 	[Route("[controller]")]
