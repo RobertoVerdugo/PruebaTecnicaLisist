@@ -39,6 +39,12 @@ namespace PruebaTecnicaLisit
 			})
 			.AddEntityFrameworkStores<ApplicationDbContext>()
 			.AddDefaultTokenProviders();
+
+			services.AddAuthorization(options =>
+			{
+				options.AddPolicy("AdminOnly", policy =>
+					policy.RequireRole("Admin"));
+			});
 		}
 
 		private static void Configure(WebApplication app, IHostEnvironment env)
@@ -59,17 +65,11 @@ namespace PruebaTecnicaLisit
 			using var scope = serviceProvider.CreateScope();
 			var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-			// Crear roles si no existen
-			var adminRoleExists = await roleManager.RoleExistsAsync("Administrador");
+			// Crear rol si no existen
+			var adminRoleExists = await roleManager.RoleExistsAsync("Admin");
 			if (!adminRoleExists)
 			{
-				await roleManager.CreateAsync(new IdentityRole("Administrador"));
-			}
-
-			var userRoleExists = await roleManager.RoleExistsAsync("UsuarioNormal");
-			if (!userRoleExists)
-			{
-				await roleManager.CreateAsync(new IdentityRole("UsuarioNormal"));
+				await roleManager.CreateAsync(new IdentityRole("Admin"));
 			}
 		}
 	}
