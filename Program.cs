@@ -1,9 +1,16 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using PruebaTecnicaLisit.Models;
+using Swashbuckle.AspNetCore.Filters;
+using System.Text;
 
 namespace PruebaTecnicaLisit
 {
-	public class Program
+    public class Program
 	{
 		public static async Task Main(string[] args)
 		{
@@ -15,7 +22,7 @@ namespace PruebaTecnicaLisit
 
 			Configure(app, app.Environment);
 
-			//await InitializeRolesAsync(app.Services);
+			await InitializeRolesAsync(app.Services);
 
 			app.Run();
 		}
@@ -24,7 +31,32 @@ namespace PruebaTecnicaLisit
 		{
 			services.AddControllers();
 			services.AddEndpointsApiExplorer();
-			services.AddSwaggerGen();
+			services.AddSwaggerGen(options =>
+			{
+				options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+				{
+					Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+					Name = "Authorization",
+					In = ParameterLocation.Header,
+					Type = SecuritySchemeType.ApiKey,
+					Scheme = "Bearer"
+				});
+
+				options.AddSecurityRequirement(new OpenApiSecurityRequirement
+				{
+					{
+						new OpenApiSecurityScheme
+						{
+							Reference = new OpenApiReference
+							{
+								Type = ReferenceType.SecurityScheme,
+								Id = "Bearer"
+							}
+						},
+						new string[] {}
+					}
+				});
+			});
 
 			services.AddDbContext<ApplicationDbContext>(options =>
 			{
@@ -35,15 +67,34 @@ namespace PruebaTecnicaLisit
 
 			services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 			{
-				options.Password.RequiredLength = 8;
+				options.Password.RequireDigit = false;
+				options.Password.RequireLowercase = false;
+				options.Password.RequireUppercase = false;
+				options.Password.RequireNonAlphanumeric = false;
+				options.Password.RequiredLength = 4;
 			})
 			.AddEntityFrameworkStores<ApplicationDbContext>()
 			.AddDefaultTokenProviders();
 
-			services.AddAuthorization(options =>
+
+			var jwtSettings = configuration.GetSection("JwtSettings");
+			var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]);
+			services.AddAuthentication(options =>
 			{
-				options.AddPolicy("AdminOnly", policy =>
-					policy.RequireRole("Admin"));
+				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+			})
+			.AddJwtBearer(options =>
+			{
+				options.RequireHttpsMetadata = false;
+				options.SaveToken = true;
+				options.TokenValidationParameters = new TokenValidationParameters
+				{
+					ValidateIssuerSigningKey = true,
+					IssuerSigningKey = new SymmetricSecurityKey(key),
+					ValidateIssuer = false,
+					ValidateAudience = false
+				};
 			});
 		}
 
@@ -51,10 +102,19 @@ namespace PruebaTecnicaLisit
 		{
 			if (env.IsDevelopment())
 			{
+				app.UseDeveloperExceptionPage();
 				app.UseSwagger();
-				app.UseSwaggerUI();
-			}
+				app.UseSwaggerUI(options =>
+				{
+					options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+					options.RoutePrefix = "swagger";
 
+					options.OAuthClientId("your-client-id");
+					options.OAuthClientSecret("your-client-secret");
+					options.OAuthAppName("Swagger UI");
+					options.OAuthUseBasicAuthenticationWithAccessCodeGrant();
+				});
+			}
 			app.UseHttpsRedirection();
 			app.UseAuthentication();
 			app.UseAuthorization();
@@ -65,7 +125,6 @@ namespace PruebaTecnicaLisit
 			using var scope = serviceProvider.CreateScope();
 			var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-			// Crear rol si no existen
 			var adminRoleExists = await roleManager.RoleExistsAsync("Admin");
 			if (!adminRoleExists)
 			{
