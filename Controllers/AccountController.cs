@@ -23,14 +23,25 @@ namespace PruebaTecnicaLisit.Controllers
 			_userManager = userManager;
 			_dbContext = dbContext;
 		}
+		[HttpGet]
+		public async Task<IActionResult> Get()
+		{
+			var users = _dbContext.Users
+				.Select(u => new
+				{
+					IdUsuario = u.Id,
+					Email = u.Email
+				})
+				.ToList();
+
+			return Ok(users);
+		}
 
 		[HttpPost("login")]
 		public async Task<IActionResult> Login([FromBody] LoginData loginData)
 		{
-			if (loginData == null || string.IsNullOrEmpty(loginData.Email) || string.IsNullOrEmpty(loginData.Password))
-			{
-				return BadRequest(new { message = "Email and password are required" });
-			}
+			if (!ModelState.IsValid)
+				return BadRequest(ModelState);
 
 			var result = await _signInManager.PasswordSignInAsync(loginData.Email, loginData.Password, true, lockoutOnFailure: false);
 
@@ -39,7 +50,7 @@ namespace PruebaTecnicaLisit.Controllers
 				var user = await _userManager.FindByEmailAsync(loginData.Email);
 				var tokenString = GenerateJwtToken(user);
 
-				return Ok(new { token = tokenString });
+				return Ok(new { token = tokenString, idUsuario = user.Id });
 			}
 
 			return BadRequest(new { message = "Invalid email or password" });
@@ -48,18 +59,18 @@ namespace PruebaTecnicaLisit.Controllers
 		[HttpPost("register")]
 		public async Task<IActionResult> Register([FromBody] RegisterData registerData)
 		{
-			if (registerData == null || string.IsNullOrEmpty(registerData.Email) || string.IsNullOrEmpty(registerData.Password))
-			{
-				return BadRequest(new { message = "Email and password are required" });
-			}
+			if (!ModelState.IsValid)
+				return BadRequest(ModelState);
 
-			var user = new ApplicationUser { UserName = registerData.Email, Email = registerData.Email, IdComuna = registerData.IdComuna };
 			var comuna = await _dbContext.Comunas.FindAsync(registerData.IdComuna);
+			if (comuna is null) 
+				return NotFound("La Comuna especificada no existe");
+
+			var user = new ApplicationUser { UserName = registerData.Email, Email = registerData.Email, IdComuna = registerData.IdComuna, Comuna = comuna };
+			//var user = new ApplicationUser { UserName = registerData.Email, Email = registerData.Email};
 			var result = await _userManager.CreateAsync(user, registerData.Password);
 			if (result.Succeeded)
-			{
-				if(comuna is null) return BadRequest(new { message = "Failed to register - Comuna inválida" });
-				user.Comuna = comuna;
+			{	
 				return Ok(new { message = "Registration successful" });
 			}
 			return BadRequest(new { message = "Failed to register" });
@@ -75,7 +86,7 @@ namespace PruebaTecnicaLisit.Controllers
 		{
 			bool isAdmin = _userManager.IsInRoleAsync(user, "Admin").Result;
 			var tokenHandler = new JwtSecurityTokenHandler();
-			var key = Encoding.ASCII.GetBytes("TuClaveSecretaAqui");
+			var key = Encoding.ASCII.GetBytes("c3p6V3IwODVxTmRHVXhJdE82SDVwTkhZVEE1Z1loS0VZTVo2ZkRWTjZkOW1aVzZMZ1FrS3oyV25iUjZM");
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
 				Subject = new ClaimsIdentity(new Claim[]

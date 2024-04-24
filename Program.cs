@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using PruebaTecnicaLisit.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace PruebaTecnicaLisit
 {
@@ -29,7 +30,11 @@ namespace PruebaTecnicaLisit
 
 		private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 		{
-			services.AddControllers();
+			services.AddControllers()
+			.AddJsonOptions(options =>
+			{
+				options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+			});
 			services.AddEndpointsApiExplorer();
 			services.AddSwaggerGen(options =>
 			{
@@ -106,12 +111,12 @@ namespace PruebaTecnicaLisit
 				app.UseSwagger();
 				app.UseSwaggerUI(options =>
 				{
-					options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+					/*options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
 					options.RoutePrefix = "swagger";
 
 					options.OAuthClientId("your-client-id");
 					options.OAuthClientSecret("your-client-secret");
-					options.OAuthAppName("Swagger UI");
+					options.OAuthAppName("Swagger UI");*/
 					options.OAuthUseBasicAuthenticationWithAccessCodeGrant();
 				});
 			}

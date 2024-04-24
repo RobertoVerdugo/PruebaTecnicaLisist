@@ -9,6 +9,7 @@ namespace PruebaTecnicaLisit.Models
     {
         [ForeignKey("Comuna")]
         public int IdComuna { get; set; }
+
 		public Comuna Comuna { get; set; }
 		public ICollection<AsignacionServicio> ServiciosUsuario { get; set; }
 	}

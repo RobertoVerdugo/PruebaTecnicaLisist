@@ -25,12 +25,13 @@ namespace PruebaTecnicaLisit.Models
 			modelBuilder.Entity<Region>()
                 .HasOne(r => r.Pais)
                 .WithMany(p => p.Regiones)
-                .HasForeignKey(r => r.IdPais);
-
-            modelBuilder.Entity<Comuna>()
+                .HasForeignKey(r => r.IdPais)
+				.OnDelete(DeleteBehavior.Cascade);
+			modelBuilder.Entity<Comuna>()
                 .HasOne(c => c.Region)
                 .WithMany(r => r.Comunas)
-                .HasForeignKey(c => c.IdRegion);
+                .HasForeignKey(c => c.IdRegion)
+				.OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<ApplicationUser>()
 				.HasOne(u => u.Comuna)
@@ -40,12 +41,14 @@ namespace PruebaTecnicaLisit.Models
 			modelBuilder.Entity<AsignacionServicio>()
 				.HasOne(a => a.Usuario)
 				.WithMany(u => u.ServiciosUsuario)
-				.HasForeignKey(a => a.IdUsuario);
+				.HasForeignKey(a => a.IdUsuario)
+				.OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<AsignacionServicio>()
 				.HasOne(a => a.Servicio)
 				.WithMany(s => s.ServiciosUsuario)
-				.HasForeignKey(a => a.IdServicio);
+				.HasForeignKey(a => a.IdServicio)
+				.OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Servicio>()
 			.HasMany(s => s.Comunas)

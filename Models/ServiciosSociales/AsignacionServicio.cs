@@ -8,7 +8,7 @@ namespace PruebaTecnicaLisit.Models.ServiciosSociales
 
 		[Key]
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-		public int IdAsignación { get; set; }
+		public int IdAsignacion { get; set; }
 		[ForeignKey("ApplicationUser")]
 		public string IdUsuario { get; set; }
 		[ForeignKey("Servicio")]
