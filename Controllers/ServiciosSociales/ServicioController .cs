@@ -59,6 +59,12 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 
 			return servicioDTO;
 		}
+		/// <summary>
+		/// Obtiene los servicios por comuna
+		/// </summary>
+		/// <remarks>
+		/// Obtiene todos los servicios que están disponibles para una comuna
+		/// </remarks>
 		[HttpGet("servicios-comuna/{idComuna}")]
 		public async Task<ActionResult<IEnumerable<ServicioDTOGet>>> GetServiciosByComuna(int idComuna)
 		{
@@ -79,7 +85,12 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 
 			return Ok(servicios);
 		}
-
+		/// <summary>
+		/// Crea un servicio social para una región
+		/// </summary>
+		/// <remarks>
+		/// Crea un servicio social para cada comuna perteneciente a la región indicada
+		/// </remarks>
 		[HttpPost("crear-servicio-region")]
 		public async Task<ActionResult<Servicio>> PostServicioByRegion(ServicioDTOPostRegion servicioDTO)
 		{
@@ -103,12 +114,18 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 				comuna.Servicios.Add(servicio);
 				servicio.Comunas.Add(comuna); 
 			}
-
+			
 			await _context.SaveChangesAsync();
 			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), servicioDTO.ToString());
 			return CreatedAtAction(nameof(GetServicio), new { id = servicio.IdServicio }, servicioDTO);
 		}
-
+		/// <summary>
+		/// Crea un servicio social para una o más comunas
+		/// </summary>
+		/// <remarks>
+		/// Crea un servicio social para cada comuna especificada
+		/// </remarks>
+		/// <param name="servicioDTO.IdComunas"> Lista de Ids de Comunas. Se creará un servicio para cada Id especificado</param>
 		[HttpPost("crear-servicio-comuna")]
 		public async Task<ActionResult<Servicio>> PostServicioByComunas(ServicioDTOPostComuna servicioDTO)
 		{

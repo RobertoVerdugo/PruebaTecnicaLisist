@@ -19,6 +19,14 @@ namespace PruebaTecnicaLisit.Controllers.Logging
 		{
 			_context = context;
 		}
+		/// <summary>
+		/// Obtiene logs por fecha.
+		/// </summary>
+		/// <remarks>
+		/// Obtiene todos los logs para una fecha específica.
+		/// </remarks>
+		/// <param name="fecha">Fecha en el formato 'yyyy-mm-dd'. Por ejemplo, '2024-04-24'.</param>
+		/// <response code="200">Lista de logs para la fecha especificada.</response>
 		[HttpGet("logs/{fecha}")]
 		public async Task<ActionResult<IEnumerable<Logger>>> GetLogsByDate(DateTime fecha)
 		{

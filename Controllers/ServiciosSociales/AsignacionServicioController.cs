@@ -25,7 +25,12 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			_logger = logger;
 			_userManager = userManager;
 		}
-
+		/// <summary>
+		/// Obtiene todas las asignaciones
+		/// </summary>
+		/// <remarks>
+		/// Obtiene todas las asignaciones existentes. Solo accesible por un Adminsitrador.
+		/// </remarks>
 		[HttpGet]
 		//[Authorize(Roles = "Administrador")]
 		public async Task<IActionResult> GetAsignaciones()
@@ -48,6 +53,9 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString());
 			return Ok(asignacionesDTO);
 		}
+		/// <summary>
+		/// Obtiene una ayuda por Id
+		/// </summary>
 		[HttpGet("{idAsignacion}")]
 		//[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> GetAsignacion(int idAsignacion)
@@ -72,7 +80,14 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), idAsignacion.ToString());
 			return Ok(dto);
 		}
-
+		/// <summary>
+		/// Obtiene las ayudas de un usuario
+		/// </summary>
+		/// <remarks>
+		/// Obtiene todas las ayudas asignadas a un usuario específico. 
+		/// Un administrador tiene acceso a las ayudas de todos los usuarios.
+		/// Un usuario autenticado tiene acceso a sus propias ayudas asignadas.
+		/// </remarks>
 		[HttpGet("asignaciones-usuario/{userId}")]
 		[Authorize]
 		public async Task<IActionResult> GetAsignacionesUsuario(string userId)

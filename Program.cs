@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PruebaTecnicaLisit.Models.Application;
 using PruebaTecnicaLisit.Models.Logging;
+using System.Reflection;
 using System.Text;
 
 namespace PruebaTecnicaLisit
@@ -67,6 +68,9 @@ namespace PruebaTecnicaLisit
 						new string[] {}
 					}
 				});
+				var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+				var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+				options.IncludeXmlComments(xmlPath);
 			});
 
 			services.AddDbContext<ApplicationDbContext>(options =>
@@ -112,16 +116,12 @@ namespace PruebaTecnicaLisit
 
 		private static void Configure(WebApplication app, IHostEnvironment env)
 		{
-			if (env.IsDevelopment())
+			app.UseSwagger();
+			app.UseSwaggerUI(options =>
 			{
-				app.UseDeveloperExceptionPage();
-				app.UseSwagger();
-				app.UseSwaggerUI(options =>
-				{
-					options.SwaggerEndpoint("/swagger/v1/swagger.json", "Prueba Tecnica Lisit API v1");
-					options.RoutePrefix = "swagger";
-				});
-			}
+				options.SwaggerEndpoint("/swagger/v1/swagger.json", "Prueba Tecnica Lisit API v1");
+				options.RoutePrefix = "swagger";
+			});
 			app.UseHttpsRedirection();
 			app.UseAuthentication();
 			app.UseAuthorization();

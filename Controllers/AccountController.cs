@@ -31,6 +31,12 @@ namespace PruebaTecnicaLisit.Controllers
 			_dbContext = dbContext;
 			_logger = logger;
 		}
+		/// <summary>
+		/// Obtiene los datos de todas las cuentas.
+		/// </summary>
+		/// <remarks>
+		/// Obtiene el e-mail y el Id de cada usuario existente. Solo accesible por un Adminsitrador.
+		/// </remarks>
 		[HttpGet]
 		public async Task<IActionResult> GetUsers()
 		{
