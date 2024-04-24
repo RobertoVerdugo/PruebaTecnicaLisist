@@ -67,7 +67,6 @@ namespace PruebaTecnicaLisit.Controllers
 				return NotFound("La Comuna especificada no existe");
 
 			var user = new ApplicationUser { UserName = registerData.Email, Email = registerData.Email, IdComuna = registerData.IdComuna, Comuna = comuna };
-			//var user = new ApplicationUser { UserName = registerData.Email, Email = registerData.Email};
 			var result = await _userManager.CreateAsync(user, registerData.Password);
 			if (result.Succeeded)
 			{	
@@ -102,6 +101,19 @@ namespace PruebaTecnicaLisit.Controllers
 
 			return tokenString;
 		}
+		[HttpPost("asignar-admin/{userId}")]
+		public async Task<IActionResult> AssignAdminRole(string userId)
+		{
+			var user = await _userManager.FindByIdAsync(userId);
+			if (user == null)
+				return NotFound(new { message = "User not found" });
+
+			var result = await _userManager.AddToRoleAsync(user, "Admin");
+			if (result.Succeeded)
+				return Ok(new { message = "Admin role assigned successfully" });
+			else
+				return BadRequest(new { message = "Failed to assign Admin role", errors = result.Errors });
+		}	
 
 	}
 
