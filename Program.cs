@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using PruebaTecnicaLisit.Models;
-using Swashbuckle.AspNetCore.Filters;
+using PruebaTecnicaLisit.Models.Application;
+using PruebaTecnicaLisit.Models.Logging;
 using System.Text;
-using System.Text.Json.Serialization;
 
 namespace PruebaTecnicaLisit
 {
@@ -30,17 +30,23 @@ namespace PruebaTecnicaLisit
 
 		private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 		{
-			services.AddControllers()
-			.AddJsonOptions(options =>
+			services.AddControllers();
+			/*.AddJsonOptions(options =>
 			{
 				options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-			});
+			});*/
 			services.AddEndpointsApiExplorer();
 			services.AddSwaggerGen(options =>
 			{
+				options.SwaggerDoc("v1", new OpenApiInfo
+				{
+					Title = "Prueba Tecnica Lisit API",
+					Version = "v1",
+					Description = "API para la gestión de servicios de ayuda social",
+				});
 				options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 				{
-					Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+					Description = "JWT Authorization header. Esquema Bearer. Ejemplo: \"Authorization: Bearer {token}\"",
 					Name = "Authorization",
 					In = ParameterLocation.Header,
 					Type = SecuritySchemeType.ApiKey,
@@ -101,6 +107,7 @@ namespace PruebaTecnicaLisit
 					ValidateAudience = false
 				};
 			});
+			services.AddScoped<LoggerService>();
 		}
 
 		private static void Configure(WebApplication app, IHostEnvironment env)
@@ -111,13 +118,8 @@ namespace PruebaTecnicaLisit
 				app.UseSwagger();
 				app.UseSwaggerUI(options =>
 				{
-					/*options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+					options.SwaggerEndpoint("/swagger/v1/swagger.json", "Prueba Tecnica Lisit API v1");
 					options.RoutePrefix = "swagger";
-
-					options.OAuthClientId("your-client-id");
-					options.OAuthClientSecret("your-client-secret");
-					options.OAuthAppName("Swagger UI");*/
-					options.OAuthUseBasicAuthenticationWithAccessCodeGrant();
 				});
 			}
 			app.UseHttpsRedirection();

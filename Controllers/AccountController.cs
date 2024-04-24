@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using PruebaTecnicaLisit.Models;
+using PruebaTecnicaLisit.Models.Application;
+using PruebaTecnicaLisit.Models.Logging;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -16,15 +18,21 @@ namespace PruebaTecnicaLisit.Controllers
 		private readonly SignInManager<ApplicationUser> _signInManager;
 		private readonly UserManager<ApplicationUser> _userManager;
 		private readonly ApplicationDbContext _dbContext;
+		private readonly LoggerService _logger;
 
-		public AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
+		public AccountController(SignInManager<ApplicationUser> signInManager,
+								UserManager<ApplicationUser> userManager,
+								ApplicationDbContext dbContext,
+								LoggerService logger
+			)
 		{
 			_signInManager = signInManager;
 			_userManager = userManager;
 			_dbContext = dbContext;
+			_logger = logger;
 		}
 		[HttpGet]
-		public async Task<IActionResult> Get()
+		public async Task<IActionResult> GetUsers()
 		{
 			var users = _dbContext.Users
 				.Select(u => new
@@ -33,6 +41,7 @@ namespace PruebaTecnicaLisit.Controllers
 					Email = u.Email
 				})
 				.ToList();
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString());
 
 			return Ok(users);
 		}
@@ -49,11 +58,12 @@ namespace PruebaTecnicaLisit.Controllers
 			{
 				var user = await _userManager.FindByEmailAsync(loginData.Email);
 				var tokenString = GenerateJwtToken(user);
+				_logger.LogAction(user.Email, ControllerContext.RouteData.Values["action"].ToString());
 
 				return Ok(new { token = tokenString, idUsuario = user.Id });
 			}
 
-			return BadRequest(new { message = "Invalid email or password" });
+			return BadRequest(new { message = "Email o contraseña inválidos" });
 		}
 
 		[HttpPost("register")]
@@ -69,10 +79,11 @@ namespace PruebaTecnicaLisit.Controllers
 			var user = new ApplicationUser { UserName = registerData.Email, Email = registerData.Email, IdComuna = registerData.IdComuna, Comuna = comuna };
 			var result = await _userManager.CreateAsync(user, registerData.Password);
 			if (result.Succeeded)
-			{	
-				return Ok(new { message = "Registration successful" });
+			{
+				_logger.LogAction(user.Email, ControllerContext.RouteData.Values["action"].ToString());
+				return Ok(new { message = "Registrado correctamente" });
 			}
-			return BadRequest(new { message = "Failed to register" });
+			return BadRequest(new { message = "Falló al registrarse" });
 		}
 
 		[HttpPost("logout")]
@@ -110,7 +121,10 @@ namespace PruebaTecnicaLisit.Controllers
 
 			var result = await _userManager.AddToRoleAsync(user, "Admin");
 			if (result.Succeeded)
+			{
+				_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), userId);
 				return Ok(new { message = "Admin role assigned successfully" });
+			}
 			else
 				return BadRequest(new { message = "Failed to assign Admin role", errors = result.Errors });
 		}	

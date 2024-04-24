@@ -12,8 +12,8 @@ using PruebaTecnicaLisit.Models.Application;
 namespace PruebaTecnicaLisit.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240424020240_Asignacion")]
-    partial class Asignacion
+    [Migration("20240424163540_Logger")]
+    partial class Logger
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -172,7 +172,7 @@ namespace PruebaTecnicaLisit.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("PruebaTecnicaLisit.Models.ApplicationUser", b =>
+            modelBuilder.Entity("PruebaTecnicaLisit.Models.Application.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -240,6 +240,33 @@ namespace PruebaTecnicaLisit.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("PruebaTecnicaLisit.Models.Logging.Logger", b =>
+                {
+                    b.Property<int>("IdLogger")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdLogger"), 1L, 1);
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IdUsuario")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Param")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("IdLogger");
+
+                    b.ToTable("Logs");
                 });
 
             modelBuilder.Entity("PruebaTecnicaLisit.Models.ServiciosSociales.AsignacionServicio", b =>
@@ -373,7 +400,7 @@ namespace PruebaTecnicaLisit.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("PruebaTecnicaLisit.Models.ApplicationUser", null)
+                    b.HasOne("PruebaTecnicaLisit.Models.Application.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -382,7 +409,7 @@ namespace PruebaTecnicaLisit.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("PruebaTecnicaLisit.Models.ApplicationUser", null)
+                    b.HasOne("PruebaTecnicaLisit.Models.Application.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -397,7 +424,7 @@ namespace PruebaTecnicaLisit.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PruebaTecnicaLisit.Models.ApplicationUser", null)
+                    b.HasOne("PruebaTecnicaLisit.Models.Application.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -406,14 +433,14 @@ namespace PruebaTecnicaLisit.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("PruebaTecnicaLisit.Models.ApplicationUser", null)
+                    b.HasOne("PruebaTecnicaLisit.Models.Application.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PruebaTecnicaLisit.Models.ApplicationUser", b =>
+            modelBuilder.Entity("PruebaTecnicaLisit.Models.Application.ApplicationUser", b =>
                 {
                     b.HasOne("PruebaTecnicaLisit.Models.Ubicacion.Comuna", "Comuna")
                         .WithMany()
@@ -432,7 +459,7 @@ namespace PruebaTecnicaLisit.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PruebaTecnicaLisit.Models.ApplicationUser", "Usuario")
+                    b.HasOne("PruebaTecnicaLisit.Models.Application.ApplicationUser", "Usuario")
                         .WithMany("ServiciosUsuario")
                         .HasForeignKey("IdUsuario")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -465,7 +492,7 @@ namespace PruebaTecnicaLisit.Migrations
                     b.Navigation("Pais");
                 });
 
-            modelBuilder.Entity("PruebaTecnicaLisit.Models.ApplicationUser", b =>
+            modelBuilder.Entity("PruebaTecnicaLisit.Models.Application.ApplicationUser", b =>
                 {
                     b.Navigation("ServiciosUsuario");
                 });

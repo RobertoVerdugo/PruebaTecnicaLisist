@@ -2,23 +2,30 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnicaLisit.Models.Ubicacion;
-using PruebaTecnicaLisit.Models;
 using System.Data;
 using System.Runtime.InteropServices;
 using PruebaTecnicaLisit.Models.ServiciosSociales;
+using PruebaTecnicaLisit.Models.Application;
+using Microsoft.AspNetCore.Identity;
+using PruebaTecnicaLisit.Models.Logging;
 
 namespace PruebaTecnicaLisit.Controllers.Ubicacion
 {
-	[Route("api/[controller]")]
+    [Route("api/[controller]")]
 	//[Authorize(Roles = "Admin")]
 	[ApiController]
 	public class ComunaController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
-
-		public ComunaController(ApplicationDbContext context)
+		private readonly LoggerService _logger;
+		private readonly UserManager<ApplicationUser> _userManager;
+		public ComunaController(ApplicationDbContext context,
+								LoggerService logger,
+								UserManager<ApplicationUser> userManager)
 		{
 			_context = context;
+			_logger = logger;
+			_userManager = userManager;
 		}
 		[AllowAnonymous]
 		[HttpGet]
@@ -55,23 +62,23 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 				.FirstOrDefaultAsync();
 
 			if (comuna == null)
-				return NotFound();
+				return NotFound("La comuna especificada no existe");
 
 			return comuna;
 		}
 
 		[HttpPost]
-		public async Task<ActionResult<Comuna>> PostComuna(ComunaDTO comunaDTO)
+		public async Task<ActionResult<Comuna>> PostComuna(ComunaDTOPost comunaDTO)
 		{
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
+
 			var region = await _context.Regiones
 				.Include(r => r.Comunas)
 				.FirstOrDefaultAsync(r => r.IdRegion == comunaDTO.IdRegion);
-
-
 			if (region == null)
 				return NotFound("La region especificada no existe");
+
 			var comuna = new Comuna
 			{
 				Nombre = comunaDTO.Nombre,
@@ -81,26 +88,27 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 			region.Comunas.Add(comuna);	
 			_context.Comunas.Add(comuna);
 			await _context.SaveChangesAsync();
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), comunaDTO.Nombre);
 			return CreatedAtAction(nameof(GetComuna), new { id = comuna.IdComuna }, comunaDTO);
 		}
 
 		[HttpPut("{id}")]
-		public async Task<IActionResult> PutComuna(int id, ComunaDTO comunaDTO)
+		public async Task<IActionResult> PutComuna(int id, ComunaDTOPost comunaDTO)
 		{
 			var comuna = await _context.Comunas
 				.Include(c => c.Region)
 				.ThenInclude(r => r.Comunas)
 				.FirstOrDefaultAsync(c=> c.IdComuna == id);
 			if (comuna == null)
-				return NotFound();
-			comuna.Region.Comunas.Remove(comuna);
+				return NotFound("La comuna especificada no existe");
+
 			var region = await _context.Regiones
 				.Include(r => r.Comunas)
 				.FirstOrDefaultAsync(r => r.IdRegion == comunaDTO.IdRegion);
 			if (region == null)
-				return NotFound("La region especificada no existe");
+				return NotFound("La región especificada no existe");
 
+			comuna.Region.Comunas.Remove(comuna);
 			comuna.Nombre = comunaDTO.Nombre;
 			comuna.IdRegion = comunaDTO.IdRegion;
 			comuna.Region = region;
@@ -119,7 +127,7 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 				else
 					throw;
 			}
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), id.ToString());
 			return NoContent();
 		}
 
@@ -131,11 +139,11 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 				.ThenInclude(r => r.Comunas)
 				.FirstOrDefaultAsync(c => c.IdComuna == id);
 			if (comuna == null)
-				return NotFound();
+				return NotFound("La comuna especificada no existe");
 			comuna.Region.Comunas.Remove(comuna);
 			_context.Comunas.Remove(comuna);
 			await _context.SaveChangesAsync();
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), id.ToString());
 			return NoContent();
 		}
 		private bool ComunaExist(int id)
@@ -143,7 +151,7 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 			return _context.Comunas.Any(e => e.IdComuna == id);
 		}
 	}
-	public class ComunaDTO
+	public class ComunaDTOPost
 	{
 		public int IdRegion { get; set; }
 		public string Nombre { get; set; }

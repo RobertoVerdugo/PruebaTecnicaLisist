@@ -2,23 +2,27 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PruebaTecnicaLisit.Models;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using PruebaTecnicaLisit.Migrations;
+using PruebaTecnicaLisit.Models.Application;
+using PruebaTecnicaLisit.Models.Logging;
 using PruebaTecnicaLisit.Models.ServiciosSociales;
 using System.Security.Claims;
 
 namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 {
-	[Route("api/[controller]")]
+    [Route("api/[controller]")]
 	//[Authorize(Roles = "Admin")]
 	[ApiController]
 	public class AsignacionServicioController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
+		private readonly LoggerService _logger;
 		private readonly UserManager<ApplicationUser> _userManager;
-
-		public AsignacionServicioController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+		public AsignacionServicioController(ApplicationDbContext context, LoggerService logger, UserManager<ApplicationUser> userManager)
 		{
 			_context = context;
+			_logger = logger;
 			_userManager = userManager;
 		}
 
@@ -32,7 +36,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 				.Include(a => a.Servicio)
 				.ToListAsync();
 
-			var asignacionesDTO = asignaciones.Select(a => new AsignacionServicioDTO
+			var asignacionesDTO = asignaciones.Select(a => new AsignacionServicioDTOGet
 			{
 				IdAsignacion = a.IdAsignacion,
 				IdUsuario = a.IdUsuario,
@@ -41,10 +45,10 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 				NombreServicio = a.Servicio.Nombre,
 				AnioAsignacion = a.Año
 			}).ToList();
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString());
 			return Ok(asignacionesDTO);
 		}
-		[HttpGet("asginacion/{idAsignacion}")]
+		[HttpGet("{idAsignacion}")]
 		//[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> GetAsignacion(int idAsignacion)
 		{
@@ -54,9 +58,9 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 				.Include(a => a.Servicio)
 				.FirstOrDefaultAsync(a => a.IdAsignacion == idAsignacion);
 			if (asignacion == null)
-				return NotFound();
+				return NotFound("La asignación especificada no existe");
 
-			var dto = new AsignacionServicioDTO
+			var dto = new AsignacionServicioDTOGet
 			{
 				IdAsignacion = asignacion.IdAsignacion,
 				IdUsuario = asignacion.Usuario.Id,
@@ -65,11 +69,11 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 				NombreServicio = asignacion.Servicio.Nombre,
 				AnioAsignacion = asignacion.Año
 			};
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), idAsignacion.ToString());
 			return Ok(dto);
 		}
 
-		[HttpGet("usuario/{userId}")]
+		[HttpGet("asignaciones-usuario/{userId}")]
 		[Authorize]
 		public async Task<IActionResult> GetAsignacionesUsuario(string userId)
 		{
@@ -79,14 +83,14 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 					.ThenInclude(a => a.Servicio)
 				.FirstOrDefaultAsync(u => u.Id == userId);
 			if (usuario == null)
-				return NotFound();
+				return NotFound("El usuario especificado no existe");
 
 			var esUsuarioSolicitado = usuario.Id == _userManager.GetUserName(User);
 			var esAdmin = User.IsInRole("Admin");
 			if (!esUsuarioSolicitado && !esAdmin)
 				return Forbid(); 
 
-			var asignaciones = usuario.ServiciosUsuario.Select(a => new AsignacionServicioDTO
+			var asignaciones = usuario.ServiciosUsuario.Select(a => new AsignacionServicioDTOGet
 			{
 				IdAsignacion = a.IdAsignacion,
 				IdUsuario = a.IdUsuario,
@@ -95,7 +99,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 				NombreServicio = a.Servicio.Nombre,
 				AnioAsignacion = a.Año
 			}).ToList();
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), userId);
 			return Ok(asignaciones);
 		}
 
@@ -108,14 +112,14 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 				.Include(s => s.ServiciosUsuario)
 				.FirstOrDefaultAsync(s => s.IdServicio == asignacionDTO.IdServicio);
 			if (servicio == null)
-				return NotFound($"Servicio con ID {asignacionDTO.IdServicio} no encontrado");
+				return NotFound("El servicio especificado no existe");
 
 			var usuario = await _userManager.Users
 				.Include(u => u.Comuna)
 				.Include(u => u.ServiciosUsuario)
 				.FirstOrDefaultAsync(u => u.Id == asignacionDTO.IdUsuario);
 			if (usuario == null)
-				return NotFound($"Usuario con ID {asignacionDTO.IdUsuario} no encontrado");
+				return NotFound("El usuario especificado no existe");
 
 			var comunaUsuario = usuario.Comuna;
 			if (comunaUsuario == null || servicio.Comunas.All(c => c.IdComuna != comunaUsuario.IdComuna))
@@ -141,7 +145,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 
 			_context.ServiciosUsuario.Add(nuevaAsignacion);
 			await _context.SaveChangesAsync();
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), asignacionDTO.ToString());
 			return CreatedAtAction(nameof(GetAsignacion), new { idAsignacion = nuevaAsignacion.IdAsignacion }, asignacionDTO);
 		}
 
@@ -155,22 +159,19 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 					.ThenInclude(s => s.ServiciosUsuario)
 				.FirstOrDefaultAsync(a => a.IdAsignacion == id);
 			if (asignacion == null)
-				return NotFound();
-
-			asignacion.Usuario.ServiciosUsuario.Remove(asignacion);
-			asignacion.Servicio.ServiciosUsuario.Remove(asignacion);
+				return NotFound("La asignación especificada no existe");
 
 			var servicio = await _context.Servicios
 				.Include(s => s.Comunas)
 				.FirstOrDefaultAsync(s => s.IdServicio == asignacionDTO.IdServicio);
 			if (servicio == null)
-				return NotFound($"Servicio con ID {asignacionDTO.IdServicio} no encontrado");
+				return NotFound("El servicio especificado no existe");
 
 			var usuario = await _userManager.Users
 				.Include(u => u.Comuna)
 				.FirstOrDefaultAsync(u => u.Id == asignacionDTO.IdUsuario);
 			if (usuario == null)
-				return NotFound($"Usuario con ID {asignacionDTO.IdUsuario} no encontrado");
+				return NotFound("El usuario especificado no existe");
 
 			var comunaUsuario = usuario.Comuna;
 			if (comunaUsuario == null || servicio.Comunas.All(c => c.IdComuna != comunaUsuario.IdComuna))
@@ -181,6 +182,8 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			if (asignacionExistente != null)
 				return BadRequest("El mismo servicio ya fue asignado al usuario en el mismo año");
 
+			asignacion.Usuario.ServiciosUsuario.Remove(asignacion);
+			asignacion.Servicio.ServiciosUsuario.Remove(asignacion);
 			asignacion.IdUsuario = asignacionDTO.IdUsuario;
 			asignacion.IdServicio = asignacionDTO.IdServicio;
 			asignacion.Año = asignacionDTO.Año;
@@ -199,7 +202,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 				else
 					throw; 
 			}
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), id.ToString());
 			return NoContent();
 		}
 
@@ -219,7 +222,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			asignacion.Servicio.ServiciosUsuario.Remove(asignacion);
 			_context.ServiciosUsuario.Remove(asignacion);
 			await _context.SaveChangesAsync();
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), id.ToString());
 			return NoContent();
 		}
 		private bool AsignacionServicioExists(int id)
@@ -227,7 +230,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			return _context.ServiciosUsuario.Any(s => s.IdServicio == id);
 		}
 	}
-	public class AsignacionServicioDTO
+	public class AsignacionServicioDTOGet
 	{
 		public int IdAsignacion { get;set; }
 		public string IdUsuario { get; set; }
@@ -240,6 +243,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 	{
 		public string IdUsuario { get; set; }
 		public int IdServicio { get; set; }
+		public override string ToString() { return $"IdUsuario : {IdUsuario}, IdServicio : {IdServicio}"; }
 	}
 	public class AsignacionServicioDTOPut
 	{

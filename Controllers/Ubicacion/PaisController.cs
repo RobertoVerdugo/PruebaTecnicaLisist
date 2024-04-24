@@ -1,29 +1,35 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnicaLisit.Models.Ubicacion;
-using PruebaTecnicaLisit.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Data;
+using PruebaTecnicaLisit.Models.Application;
+using Microsoft.AspNetCore.Identity;
+using PruebaTecnicaLisit.Models.Logging;
 
 namespace PruebaTecnicaLisit.Controllers.Ubicacion
 {
-	[Route("api/[controller]")]
+    [Route("api/[controller]")]
 	//[Authorize(Roles = "Admin")]
 	[ApiController]
 	public class PaisController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
+		private readonly LoggerService _logger;
+		private readonly UserManager<ApplicationUser> _userManager;
 
-		public PaisController(ApplicationDbContext context)
+		public PaisController(ApplicationDbContext context, LoggerService logger, UserManager<ApplicationUser> userManager)
 		{
 			_context = context;
+			_logger = logger;
+			_userManager = userManager;
 		}
 		[AllowAnonymous]
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<PaisDTO>>> GetPaises()
+		public async Task<ActionResult<IEnumerable<PaisDTOGet>>> GetPaises()
 		{
 			var paises = await _context.Paises
-				.Select(p => new PaisDTO
+				.Select(p => new PaisDTOGet
 				{
 					IdPais = p.IdPais,
 					Nombre = p.Nombre,
@@ -36,11 +42,11 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 
 		[AllowAnonymous]
 		[HttpGet("{id}")]
-		public async Task<ActionResult<PaisDTO>> GetPais(int id)
+		public async Task<ActionResult<PaisDTOGet>> GetPais(int id)
 		{
 			var pais = await _context.Paises
 				.Where(p => p.IdPais == id)
-				.Select(p => new PaisDTO
+				.Select(p => new PaisDTOGet
 				{
 					IdPais = p.IdPais,
 					Nombre = p.Nombre,
@@ -49,7 +55,7 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 				.FirstOrDefaultAsync();
 
 			if (pais == null)
-				return NotFound();
+				return NotFound("El país especificado no existe");
 
 			return Ok(pais);
 		}
@@ -67,7 +73,7 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 
 			_context.Paises.Add(pais);
 			await _context.SaveChangesAsync();
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), nombre);
 			return CreatedAtAction(nameof(GetPais), new { id = pais.IdPais }, new {id = pais.IdPais, nombre = nombre});
 		}
 
@@ -76,7 +82,7 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 		{
 			var pais = await _context.Paises.FindAsync(id);
 			if (pais == null)
-				return NotFound();
+				return NotFound("El país especificado no existe");
 
 			pais.Nombre = nombre;
 
@@ -93,7 +99,7 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 				else
 					throw;
 			}
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), id.ToString());
 			return NoContent();
 		}
 
@@ -102,11 +108,11 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 		{
 			var pais = await _context.Paises.FindAsync(id);
 			if (pais == null)
-				return NotFound();
+				return NotFound("El país especificado no existe");
 
 			_context.Paises.Remove(pais);
 			await _context.SaveChangesAsync();
-
+			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), id.ToString());
 			return NoContent();
 		}
 
@@ -115,7 +121,7 @@ namespace PruebaTecnicaLisit.Controllers.Ubicacion
 			return _context.Paises.Any(e => e.IdPais == id);
 		}
 	}
-	public class PaisDTO
+	public class PaisDTOGet
 	{
 		public int IdPais { get; set; }
 		public string Nombre { get; set; }

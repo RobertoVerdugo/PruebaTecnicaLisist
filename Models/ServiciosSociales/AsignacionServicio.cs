@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using PruebaTecnicaLisit.Models.Application;
 
 namespace PruebaTecnicaLisit.Models.ServiciosSociales
 {
-	public class AsignacionServicio
+    public class AsignacionServicio
 	{
 
 		[Key]
