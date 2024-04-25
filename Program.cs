@@ -1,10 +1,9 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using PruebaTecnicaLisit.Models;
 using PruebaTecnicaLisit.Models.Application;
 using PruebaTecnicaLisit.Models.Logging;
 using System.Reflection;
@@ -31,11 +30,8 @@ namespace PruebaTecnicaLisit
 
 		private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 		{
+
 			services.AddControllers();
-			/*.AddJsonOptions(options =>
-			{
-				options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-			});*/
 			services.AddEndpointsApiExplorer();
 			services.AddSwaggerGen(options =>
 			{
@@ -75,9 +71,9 @@ namespace PruebaTecnicaLisit
 
 			services.AddDbContext<ApplicationDbContext>(options =>
 			{
-				options.UseSqlServer(
+				options.UseNpgsql(
 					configuration.GetConnectionString("DefaultConnection"),
-					sqlServerOptions => sqlServerOptions.EnableRetryOnFailure());
+					npgsqlOptions => npgsqlOptions.EnableRetryOnFailure());
 			});
 
 			services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -126,6 +122,7 @@ namespace PruebaTecnicaLisit
 			app.UseAuthentication();
 			app.UseAuthorization();
 			app.MapControllers();
+			app.ApplyMigrations();
 		}
 		private static async Task InitializeRolesAsync(IServiceProvider serviceProvider)
 		{

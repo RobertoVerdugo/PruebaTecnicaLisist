@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using PruebaTecnicaLisit.Migrations;
 using PruebaTecnicaLisit.Models.Application;
 using PruebaTecnicaLisit.Models.Logging;
 using PruebaTecnicaLisit.Models.ServiciosSociales;
@@ -32,7 +31,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 		/// Obtiene todas las asignaciones existentes. Solo accesible por un Adminsitrador.
 		/// </remarks>
 		[HttpGet]
-		//[Authorize(Roles = "Administrador")]
+		[Authorize(Roles = "Administrador")]
 		public async Task<IActionResult> GetAsignaciones()
 		{
 			var asignaciones = await _context.ServiciosUsuario
@@ -57,7 +56,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 		/// Obtiene una ayuda por Id
 		/// </summary>
 		[HttpGet("{idAsignacion}")]
-		//[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> GetAsignacion(int idAsignacion)
 		{
 			var asignacion = await _context.ServiciosUsuario
@@ -119,7 +118,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 		}
 
 		[HttpPost]
-		//[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> PostAsignacionServicio(AsignacionServicioDTOPost asignacionDTO)
 		{
 			var servicio = await _context.Servicios
@@ -165,6 +164,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 		}
 
 		[HttpPut("{id}")]
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> PutAsignacionServicio(int id, AsignacionServicioDTOPut asignacionDTO)
 		{
 			var asignacion = await _context.ServiciosUsuario
@@ -222,6 +222,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 		}
 
 		[HttpDelete("{id}")]
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> DeleteAsignacionServicio(int id)
 		{
 			var asignacion = await _context.ServiciosUsuario

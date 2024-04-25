@@ -10,7 +10,7 @@ using PruebaTecnicaLisit.Models.Logging;
 namespace PruebaTecnicaLisit.Controllers.Ubicacion
 {
     [Route("api/[controller]")]
-	//[Authorize(Roles = "Admin")]
+	[Authorize(Roles = "Admin")]
 	[ApiController]
 	public class RegionController : ControllerBase
 	{

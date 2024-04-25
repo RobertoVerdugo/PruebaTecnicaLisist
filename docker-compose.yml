@@ -1,0 +1,32 @@
+version: '3.4'
+
+networks:
+  lisitnework:
+
+services:
+  PruebaLisitDb:
+    image: postgres:latest
+    container_name: PruebaLisitDb
+    environment:
+     - POSTGRES_DB=PruebaLisitDb
+     - POSTGRES_USER=pelao
+     - POSTGRES_PASSWORD=Password12345
+    volumes:
+     - ./.containers/dbLicencias:/var/lib/postgresql/data
+    ports:
+     - "5431:5432"
+    networks:
+     - lisitnework 
+  lisitapi:
+    image: ${DOCKER_REGISTRY-}lisitapi
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+     - "80:80"
+     - "443:443"
+    depends_on:
+     - PruebaLisitDb
+    networks:
+     - lisitnework 
+    restart: on-failure

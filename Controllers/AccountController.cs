@@ -37,6 +37,7 @@ namespace PruebaTecnicaLisit.Controllers
 		/// <remarks>
 		/// Obtiene el e-mail y el Id de cada usuario existente. Solo accesible por un Adminsitrador.
 		/// </remarks>
+		[Authorize(Roles = "Admin")]
 		[HttpGet]
 		public async Task<IActionResult> GetUsers()
 		{
@@ -118,6 +119,7 @@ namespace PruebaTecnicaLisit.Controllers
 
 			return tokenString;
 		}
+		[Authorize(Roles = "Admin")]
 		[HttpPost("asignar-admin/{userId}")]
 		public async Task<IActionResult> AssignAdminRole(string userId)
 		{

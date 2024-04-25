@@ -56,8 +56,11 @@ namespace PruebaTecnicaLisit.Models.Application
             .HasMany(s => s.Comunas)
             .WithMany(c => c.Servicios)
             .UsingEntity(j => j.ToTable("ServiciosComuna"));
+			modelBuilder.Entity<Logger>()
+				.Property(l => l.Timestamp)
+				.HasColumnType("timestamp");
 
-        }
+		}
 
     }
 }

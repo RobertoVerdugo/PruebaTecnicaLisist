@@ -19,8 +19,8 @@ namespace PruebaTecnicaLisit.Models.Logging
 				IdUsuario = userId,
 				Action = GetActionDescription(action),
 				Param = param,
-				Timestamp = DateTime.Now
-			};
+				Timestamp = DateTime.Now.AddHours(-4)
+		};
 
 			_context.Logs.Add(logEntry);
 			_context.SaveChanges();

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 {
     [Route("api/[controller]")]
-	//[Authorize(Roles = "Admin")]
+	[Authorize(Roles = "Admin")]
 	[ApiController]
 	public class ServicioController : ControllerBase
 	{
@@ -25,7 +25,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			_logger = logger;
 			_userManager = userManager;
 		}
-
+		[AllowAnonymous]
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<ServicioDTOGet>>> GetServicios()
 		{
@@ -40,7 +40,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 
 			return Ok(servicios);
 		}
-
+		[AllowAnonymous]
 		[HttpGet("{id}")]
 		public async Task<ActionResult<ServicioDTOGet>> GetServicio(int id)
 		{
@@ -65,6 +65,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 		/// <remarks>
 		/// Obtiene todos los servicios que están disponibles para una comuna
 		/// </remarks>
+		[AllowAnonymous]
 		[HttpGet("servicios-comuna/{idComuna}")]
 		public async Task<ActionResult<IEnumerable<ServicioDTOGet>>> GetServiciosByComuna(int idComuna)
 		{
