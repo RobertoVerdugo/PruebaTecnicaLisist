@@ -86,33 +86,7 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 
 			return Ok(servicios);
 		}
-		/// <summary>
-		/// Obtiene los servicios disponibles para un usuario
-		/// </summary>
-		/// <remarks>
-		/// Obtiene todos los servicios que están disponibles para un usuario según su comuna. Solo es accesible por un administrador.
-		/// </remarks>
-		[HttpGet("servicios-usuario/{idUsuario}")]
-		public async Task<ActionResult<IEnumerable<ServicioDTOGet>>> GetServiciosByusuario(string idUsuario)
-		{
-			var usuario = await _userManager.Users
-				.Include(u => u.Comuna)
-				.ThenInclude(c => c.Servicios)
-				.FirstOrDefaultAsync(u => u.Id == idUsuario);
-			if (usuario == null)
-				return NotFound("El usuario especificado no existe");
 
-			var servicios = usuario.Comuna.Servicios
-				.Select(s => new ServicioDTOGet
-				{
-					IdServicio = s.IdServicio,
-					Nombre = s.Nombre,
-					NombresComunas = s.Comunas.Select(c => c.Nombre).ToList()
-				})
-				.ToList();
-
-			return Ok(servicios);
-		}
 		/// <summary>
 		/// Crea un servicio social para una región
 		/// </summary>
