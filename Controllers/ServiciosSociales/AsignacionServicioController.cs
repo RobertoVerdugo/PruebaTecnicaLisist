@@ -10,7 +10,10 @@ using System.Security.Claims;
 
 namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 {
-    [Route("api/[controller]")]
+	/// <summary>
+	/// Controlador para manejar las asignaciones de servicios de ayuda social a usuarios.
+	/// </summary>
+	[Route("api/[controller]")]
 	//[Authorize(Roles = "Admin")]
 	[ApiController]
 	public class AsignacionServicioController : ControllerBase
@@ -116,7 +119,12 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString(), userId);
 			return Ok(asignaciones);
 		}
-
+		/// <summary>
+		/// Asigna un servicio social a un usuario
+		/// </summary>
+		/// <remarks>
+		/// Asigna un servicio social a un usuario. Se asigna usando el año actual.
+		/// </remarks>
 		[HttpPost]
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> PostAsignacionServicio(AsignacionServicioDTOPost asignacionDTO)
@@ -139,12 +147,11 @@ namespace PruebaTecnicaLisit.Controllers.ServiciosSociales
 			if (comunaUsuario == null || servicio.Comunas.All(c => c.IdComuna != comunaUsuario.IdComuna))
 				return BadRequest("El usuario y el servicio deben pertenecer a la misma comuna");
 
-			var añoActual = DateTime.Now.Year;
+			int añoActual = DateTime.Now.Year;
 			var asignacionExistente = await _context.ServiciosUsuario
 				.FirstOrDefaultAsync(a => a.IdUsuario == asignacionDTO.IdUsuario && a.IdServicio == asignacionDTO.IdServicio && a.Año == añoActual);
 			if (asignacionExistente != null)
 				return BadRequest("El mismo servicio ya fue asignado al usuario en el mismo año");
-
 
 			var nuevaAsignacion = new AsignacionServicio
 			{

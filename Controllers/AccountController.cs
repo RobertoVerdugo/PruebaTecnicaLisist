@@ -32,20 +32,23 @@ namespace PruebaTecnicaLisit.Controllers
 			_logger = logger;
 		}
 		/// <summary>
-		/// Obtiene los datos de todas las cuentas.
+		/// Obtiene los datos de todos los usuarios.
 		/// </summary>
 		/// <remarks>
-		/// Obtiene el e-mail y el Id de cada usuario existente. Solo accesible por un Adminsitrador.
+		/// Obtiene la comuna, el e-mail y el Id de cada usuario existente. Solo es accesible por un Adminsitrador.
 		/// </remarks>
 		[Authorize(Roles = "Admin")]
 		[HttpGet]
 		public async Task<IActionResult> GetUsers()
 		{
 			var users = _dbContext.Users
+				.Include(u => u.Comuna)
 				.Select(u => new
 				{
 					IdUsuario = u.Id,
-					Email = u.Email
+					Email = u.Email,
+					Comuna = u.Comuna.Nombre,
+					IdComuna = u.Comuna.IdComuna
 				})
 				.ToList();
 			_logger.LogAction(_userManager.GetUserName(User), ControllerContext.RouteData.Values["action"].ToString());
